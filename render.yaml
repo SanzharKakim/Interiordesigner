@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: interiordesigner-bot
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: ADMIN_CHAT_ID
+        sync: false
+      - key: SITE_URL
+        value: https://sanzharkakim.github.io/Interiordesigner/
+      - key: WEBHOOK_URL
+        sync: false
+      - key: WEBHOOK_SECRET
+        sync: false
