@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RoomDraft MVP</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">R</div>
+          <div>
+            <h1>RoomDraft</h1>
+            <p>Локальный интерьерный MVP</p>
+          </div>
+        </div>
+
+        <section class="panel">
+          <h2>Комната</h2>
+          <label class="upload">
+            <input id="roomInput" type="file" accept="image/*">
+            <span>Загрузить фото</span>
+          </label>
+        </section>
+
+        <section class="panel">
+          <h2>Мебель</h2>
+          <div class="catalog" id="catalog"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Цвет</h2>
+          <div class="swatches" id="swatches"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Размер</h2>
+          <label class="range-row">
+            <span>Ширина</span>
+            <input id="widthRange" type="range" min="40" max="420" value="160">
+          </label>
+          <label class="range-row">
+            <span>Высота</span>
+            <input id="heightRange" type="range" min="30" max="260" value="90">
+          </label>
+          <label class="range-row">
+            <span>Поворот</span>
+            <input id="rotateRange" type="range" min="-45" max="45" value="0">
+          </label>
+        </section>
+
+        <div class="actions">
+          <button id="duplicateBtn" type="button">Дублировать</button>
+          <button id="deleteBtn" type="button">Удалить</button>
+          <button id="exportBtn" type="button" class="primary">Сохранить PNG</button>
+        </div>
+      </aside>
+
+      <section class="workspace">
+        <div class="topbar">
+          <div>
+            <h2>Виртуальная комната</h2>
+            <p id="statusText">Загрузите фото комнаты и добавьте мебель из каталога.</p>
+          </div>
+          <button id="clearBtn" type="button">Очистить</button>
+        </div>
+
+        <div class="stage-wrap">
+          <div class="stage" id="stage">
+            <div class="empty-state" id="emptyState">
+              <strong>Фото комнаты</strong>
+              <span>Перетащите мебель после загрузки изображения.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
