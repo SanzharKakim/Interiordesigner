@@ -19,6 +19,7 @@ const perspectiveGrid = document.querySelector("#perspectiveGrid");
 const gridWidthLabel = document.querySelector("#gridWidthLabel");
 const gridDepthLabel = document.querySelector("#gridDepthLabel");
 const gridHeightLabel = document.querySelector("#gridHeightLabel");
+const stageDimensions = document.querySelector("#stageDimensions");
 const cameraTiltRange = document.querySelector("#cameraTiltRange");
 const cameraYawRange = document.querySelector("#cameraYawRange");
 const cameraZoomRange = document.querySelector("#cameraZoomRange");
@@ -89,6 +90,7 @@ let selectedItem = null;
 let selectedColor = palette[0];
 let roomImage = null;
 let dragState = null;
+let cameraDragState = null;
 
 function piece(type, label, width, height, depth, realWidth, realDepth, realHeight) {
   return { type, label, width, height, depth, realWidth, realDepth, realHeight };
@@ -153,9 +155,14 @@ function setRoomDefaults(room) {
 }
 
 function updateGridLabels() {
-  gridWidthLabel.textContent = `ширина ${Number(roomWidthInput.value).toFixed(1)} м`;
-  gridDepthLabel.textContent = `глубина ${Number(roomDepthInput.value).toFixed(1)} м`;
-  gridHeightLabel.textContent = `высота ${Number(roomHeightInput.value).toFixed(1)} м`;
+  const width = Number(roomWidthInput.value).toFixed(1);
+  const depth = Number(roomDepthInput.value).toFixed(1);
+  const height = Number(roomHeightInput.value).toFixed(1);
+
+  gridWidthLabel.textContent = `ширина ${width} м`;
+  gridDepthLabel.textContent = `глубина ${depth} м`;
+  gridHeightLabel.textContent = `высота ${height} м`;
+  stageDimensions.textContent = `Длина: ${depth} м · Ширина: ${width} м · Высота: ${height} м`;
 }
 
 function setCamera({ tilt, yaw, zoom }) {
@@ -250,7 +257,6 @@ function apply3DTransform(item) {
   item.style.setProperty("--item-color", color);
   item.style.transform = `perspective(720px) rotateZ(${rotate}deg) rotateX(${tilt}deg)`;
   item.style.zIndex = String(Math.round(parseFloat(item.style.top || "0") + height));
-  item.querySelector(".item-size").textContent = compactSizeText(item);
   if (item === selectedItem) updateSizeReadout(item);
 }
 
@@ -515,6 +521,7 @@ roomInput.addEventListener("change", () => {
 });
 
 stage.addEventListener("click", () => setSelected(null));
+stage.addEventListener("pointerdown", startCameraDrag);
 widthRange.addEventListener("input", updateSelectedDimensions);
 heightRange.addEventListener("input", updateSelectedDimensions);
 depthRange.addEventListener("input", updateSelectedDimensions);
@@ -543,3 +550,49 @@ renderRoomTypes();
 renderCatalog();
 renderSwatches();
 updateCamera();
+
+function startCameraDrag(event) {
+  if (event.target.closest(".item")) return;
+
+  stage.setPointerCapture(event.pointerId);
+  stage.classList.add("dragging-camera");
+  cameraDragState = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+    startTilt: Number(cameraTiltRange.value),
+    startYaw: Number(cameraYawRange.value),
+  };
+
+  stage.addEventListener("pointermove", dragCamera);
+  stage.addEventListener("pointerup", stopCameraDrag);
+  stage.addEventListener("pointercancel", stopCameraDrag);
+}
+
+function dragCamera(event) {
+  if (!cameraDragState) return;
+
+  const dx = event.clientX - cameraDragState.startX;
+  const dy = event.clientY - cameraDragState.startY;
+  const yaw = clamp(cameraDragState.startYaw + dx * 0.16, -35, 35);
+  const tilt = clamp(cameraDragState.startTilt - dy * 0.16, -35, 35);
+
+  cameraYawRange.value = yaw;
+  cameraTiltRange.value = tilt;
+  updateCamera();
+}
+
+function stopCameraDrag(event) {
+  if (cameraDragState) {
+    stage.releasePointerCapture(cameraDragState.pointerId);
+  }
+  stage.classList.remove("dragging-camera");
+  stage.removeEventListener("pointermove", dragCamera);
+  stage.removeEventListener("pointerup", stopCameraDrag);
+  stage.removeEventListener("pointercancel", stopCameraDrag);
+  cameraDragState = null;
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
