@@ -1,7 +1,7 @@
 :root {
-  --bg: #f4f1eb;
-  --ink: #252525;
-  --muted: #6c675f;
+  --bg: #f5f2ec;
+  --ink: #242424;
+  --muted: #68625a;
   --line: #d8d1c5;
   --paper: #fffdf8;
   --accent: #2f6f73;
@@ -28,7 +28,7 @@ input {
 
 .app {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
+  grid-template-columns: 336px minmax(0, 1fr);
   min-height: 100vh;
 }
 
@@ -45,7 +45,6 @@ input {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 4px;
 }
 
 .brand-mark {
@@ -55,7 +54,7 @@ input {
   height: 42px;
   border-radius: 8px;
   background: var(--accent);
-  color: white;
+  color: #fff;
   font-weight: 800;
 }
 
@@ -88,10 +87,10 @@ p {
 .upload {
   display: grid;
   place-items: center;
-  min-height: 48px;
+  min-height: 46px;
   border: 1px dashed #9b9283;
   border-radius: 8px;
-  background: rgba(255, 253, 248, 0.58);
+  background: rgba(255, 253, 248, 0.6);
   color: var(--ink);
   cursor: pointer;
 }
@@ -100,12 +99,14 @@ p {
   display: none;
 }
 
+.room-types,
 .catalog {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
 
+.room-types button,
 .catalog button,
 .actions button,
 .topbar button {
@@ -117,10 +118,17 @@ p {
   cursor: pointer;
 }
 
+.room-types button:hover,
 .catalog button:hover,
 .actions button:hover,
 .topbar button:hover {
   border-color: #a79d8d;
+}
+
+.room-types button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
 
 .swatches {
@@ -164,7 +172,7 @@ p {
 .actions .primary {
   grid-column: 1 / -1;
   background: var(--accent);
-  color: white;
+  color: #fff;
   border-color: var(--accent);
 }
 
@@ -185,7 +193,7 @@ p {
   gap: 16px;
   padding: 22px 26px;
   border-bottom: 1px solid var(--line);
-  background: rgba(255, 253, 248, 0.7);
+  background: rgba(255, 253, 248, 0.72);
 }
 
 .stage-wrap {
@@ -228,20 +236,17 @@ p {
   position: absolute;
   left: 80px;
   top: 80px;
-  display: grid;
-  place-items: center;
-  width: 160px;
-  height: 90px;
-  border: 2px solid rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  color: rgba(255, 255, 255, 0.92);
+  width: 180px;
+  height: 100px;
+  color: rgba(255, 255, 255, 0.94);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 750;
   text-align: center;
   user-select: none;
   cursor: grab;
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16);
   transform-origin: center;
+  transform-style: preserve-3d;
+  filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.26));
 }
 
 .item:active {
@@ -249,34 +254,101 @@ p {
 }
 
 .item.selected {
-  outline: 3px solid #ffffff;
-  outline-offset: 2px;
+  outline: 3px solid #fff;
+  outline-offset: 5px;
+}
+
+.item-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  border: 2px solid rgba(0, 0, 0, 0.22);
+  border-radius: var(--radius, 8px);
+  background: var(--item-color);
+  overflow: hidden;
+}
+
+.item-face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.24), transparent 45%, rgba(0, 0, 0, 0.16));
+  pointer-events: none;
+}
+
+.item-label {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.38);
+}
+
+.item-top,
+.item-side {
+  position: absolute;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--item-color), #fff 18%);
+  border: 2px solid rgba(0, 0, 0, 0.18);
+}
+
+.item-top {
+  left: var(--depth);
+  right: 0;
+  top: calc(var(--depth) * -1);
+  height: var(--depth);
+  transform: skewX(-42deg);
+  transform-origin: bottom left;
+  border-radius: 8px 8px 3px 3px;
+}
+
+.item-side {
+  top: calc(var(--depth) * -1);
+  right: calc(var(--depth) * -1);
+  width: var(--depth);
+  bottom: 0;
+  background: color-mix(in srgb, var(--item-color), #000 18%);
+  transform: skewY(-48deg);
+  transform-origin: bottom left;
+  border-radius: 3px 8px 8px 3px;
 }
 
 .item.sofa {
-  border-radius: 18px 18px 10px 10px;
+  --radius: 18px 18px 10px 10px;
 }
 
 .item.table {
-  border-radius: 999px;
+  --radius: 999px;
 }
 
 .item.rug {
-  border-radius: 18px;
-  opacity: 0.82;
+  --radius: 18px;
+  opacity: 0.86;
 }
 
 .item.shelf,
-.item.cabinet {
-  border-radius: 6px;
+.item.cabinet,
+.item.wardrobe,
+.item.fridge {
+  --radius: 6px;
 }
 
-.item.lamp {
-  width: 70px;
-  border-radius: 999px 999px 12px 12px;
+.item.lamp,
+.item.plant {
+  --radius: 999px 999px 12px 12px;
 }
 
-@media (max-width: 860px) {
+@supports not (background: color-mix(in srgb, #000, #fff)) {
+  .item-top {
+    background: rgba(255, 255, 255, 0.22);
+  }
+
+  .item-side {
+    background: rgba(0, 0, 0, 0.18);
+  }
+}
+
+@media (max-width: 900px) {
   .app {
     grid-template-columns: 1fr;
   }

@@ -13,7 +13,7 @@
           <div class="brand-mark">R</div>
           <div>
             <h1>RoomDraft</h1>
-            <p>Локальный интерьерный MVP</p>
+            <p>Интерьерный редактор</p>
           </div>
         </div>
 
@@ -23,6 +23,8 @@
             <input id="roomInput" type="file" accept="image/*">
             <span>Загрузить фото</span>
           </label>
+
+          <div class="room-types" id="roomTypes" aria-label="Тип комнаты"></div>
         </section>
 
         <section class="panel">
@@ -31,23 +33,31 @@
         </section>
 
         <section class="panel">
-          <h2>Цвет</h2>
+          <h2>Материал</h2>
           <div class="swatches" id="swatches"></div>
         </section>
 
         <section class="panel">
-          <h2>Размер</h2>
+          <h2>3D-подгонка</h2>
           <label class="range-row">
             <span>Ширина</span>
-            <input id="widthRange" type="range" min="40" max="420" value="160">
+            <input id="widthRange" type="range" min="40" max="440" value="180">
           </label>
           <label class="range-row">
             <span>Высота</span>
-            <input id="heightRange" type="range" min="30" max="260" value="90">
+            <input id="heightRange" type="range" min="28" max="280" value="100">
+          </label>
+          <label class="range-row">
+            <span>Глубина</span>
+            <input id="depthRange" type="range" min="0" max="90" value="28">
           </label>
           <label class="range-row">
             <span>Поворот</span>
-            <input id="rotateRange" type="range" min="-45" max="45" value="0">
+            <input id="rotateRange" type="range" min="-60" max="60" value="0">
+          </label>
+          <label class="range-row">
+            <span>Перспектива</span>
+            <input id="tiltRange" type="range" min="-25" max="25" value="0">
           </label>
         </section>
 
@@ -62,7 +72,7 @@
         <div class="topbar">
           <div>
             <h2>Виртуальная комната</h2>
-            <p id="statusText">Загрузите фото комнаты и добавьте мебель из каталога.</p>
+            <p id="statusText">Выберите тип комнаты, загрузите фото и добавьте мебель.</p>
           </div>
           <button id="clearBtn" type="button">Очистить</button>
         </div>
@@ -71,7 +81,7 @@
           <div class="stage" id="stage">
             <div class="empty-state" id="emptyState">
               <strong>Фото комнаты</strong>
-              <span>Перетащите мебель после загрузки изображения.</span>
+              <span>После загрузки фото добавьте 3D-объекты из каталога.</span>
             </div>
           </div>
         </div>
