@@ -25,6 +25,26 @@
           </label>
 
           <div class="room-types" id="roomTypes" aria-label="Тип комнаты"></div>
+
+          <div class="room-scale">
+            <label>
+              <span>Ширина, м</span>
+              <input id="roomWidthInput" type="number" min="1.5" max="12" step="0.1" value="3.2">
+            </label>
+            <label>
+              <span>Глубина, м</span>
+              <input id="roomDepthInput" type="number" min="1.5" max="12" step="0.1" value="4.0">
+            </label>
+            <label>
+              <span>Высота, м</span>
+              <input id="roomHeightInput" type="number" min="2" max="5" step="0.1" value="2.7">
+            </label>
+          </div>
+
+          <label class="toggle-row">
+            <input id="gridToggle" type="checkbox" checked>
+            <span>Показать 3D-сетку комнаты</span>
+          </label>
         </section>
 
         <section class="panel">
@@ -59,6 +79,7 @@
             <span>Перспектива</span>
             <input id="tiltRange" type="range" min="-25" max="25" value="0">
           </label>
+          <p class="size-readout" id="sizeReadout">Размеры появятся после выбора мебели.</p>
         </section>
 
         <div class="actions">
@@ -79,6 +100,11 @@
 
         <div class="stage-wrap">
           <div class="stage" id="stage">
+            <div class="perspective-grid" id="perspectiveGrid">
+              <span class="grid-label grid-width" id="gridWidthLabel">ширина 3.2 м</span>
+              <span class="grid-label grid-depth" id="gridDepthLabel">глубина 4.0 м</span>
+              <span class="grid-label grid-height" id="gridHeightLabel">высота 2.7 м</span>
+            </div>
             <div class="empty-state" id="emptyState">
               <strong>Фото комнаты</strong>
               <span>После загрузки фото добавьте 3D-объекты из каталога.</span>

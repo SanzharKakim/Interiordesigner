@@ -118,6 +118,23 @@ p {
   cursor: pointer;
 }
 
+.catalog button {
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  text-align: left;
+  padding: 8px 10px;
+}
+
+.catalog button strong {
+  font-size: 13px;
+}
+
+.catalog button small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
 .room-types button:hover,
 .catalog button:hover,
 .actions button:hover,
@@ -129,6 +146,40 @@ p {
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
+}
+
+.room-scale {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.room-scale label,
+.toggle-row {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.room-scale input {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 0 8px;
+}
+
+.toggle-row {
+  grid-template-columns: 18px 1fr;
+  align-items: center;
+  min-height: 28px;
+}
+
+.toggle-row input {
+  accent-color: var(--accent);
 }
 
 .swatches {
@@ -160,6 +211,15 @@ p {
 .range-row input {
   width: 100%;
   accent-color: var(--accent);
+}
+
+.size-readout {
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 253, 248, 0.62);
+  color: var(--ink);
+  line-height: 1.35;
 }
 
 .actions {
@@ -217,6 +277,68 @@ p {
   box-shadow: var(--shadow);
 }
 
+.perspective-grid {
+  position: absolute;
+  inset: 9% 9% 10%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.78;
+}
+
+.perspective-grid.hidden {
+  display: none;
+}
+
+.perspective-grid::before,
+.perspective-grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.perspective-grid::before {
+  background:
+    linear-gradient(115deg, transparent 49.5%, rgba(47, 111, 115, 0.72) 50%, transparent 50.5%),
+    linear-gradient(65deg, transparent 49.5%, rgba(47, 111, 115, 0.72) 50%, transparent 50.5%),
+    linear-gradient(0deg, transparent 0 72%, rgba(47, 111, 115, 0.6) 72.2%, transparent 72.6%),
+    linear-gradient(90deg, transparent 0 15%, rgba(47, 111, 115, 0.32) 15.2%, transparent 15.6%),
+    linear-gradient(90deg, transparent 0 35%, rgba(47, 111, 115, 0.32) 35.2%, transparent 35.6%),
+    linear-gradient(90deg, transparent 0 65%, rgba(47, 111, 115, 0.32) 65.2%, transparent 65.6%),
+    linear-gradient(90deg, transparent 0 85%, rgba(47, 111, 115, 0.32) 85.2%, transparent 85.6%);
+  clip-path: polygon(8% 100%, 50% 18%, 92% 100%);
+}
+
+.perspective-grid::after {
+  border: 2px solid rgba(47, 111, 115, 0.64);
+  clip-path: polygon(8% 100%, 50% 18%, 92% 100%);
+}
+
+.grid-label {
+  position: absolute;
+  padding: 5px 7px;
+  border-radius: 6px;
+  background: rgba(255, 253, 248, 0.88);
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+.grid-width {
+  left: 34%;
+  bottom: 2%;
+}
+
+.grid-depth {
+  right: 8%;
+  bottom: 39%;
+}
+
+.grid-height {
+  left: 7%;
+  top: 15%;
+}
+
 .empty-state {
   position: absolute;
   inset: 0;
@@ -247,6 +369,7 @@ p {
   transform-origin: center;
   transform-style: preserve-3d;
   filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.26));
+  z-index: 2;
 }
 
 .item:active {
@@ -282,6 +405,18 @@ p {
   position: relative;
   z-index: 1;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.38);
+}
+
+.item-size {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 6px;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 10px;
+  font-weight: 650;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 .item-top,

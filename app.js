@@ -10,6 +10,15 @@ const heightRange = document.querySelector("#heightRange");
 const depthRange = document.querySelector("#depthRange");
 const rotateRange = document.querySelector("#rotateRange");
 const tiltRange = document.querySelector("#tiltRange");
+const sizeReadout = document.querySelector("#sizeReadout");
+const roomWidthInput = document.querySelector("#roomWidthInput");
+const roomDepthInput = document.querySelector("#roomDepthInput");
+const roomHeightInput = document.querySelector("#roomHeightInput");
+const gridToggle = document.querySelector("#gridToggle");
+const perspectiveGrid = document.querySelector("#perspectiveGrid");
+const gridWidthLabel = document.querySelector("#gridWidthLabel");
+const gridDepthLabel = document.querySelector("#gridDepthLabel");
+const gridHeightLabel = document.querySelector("#gridHeightLabel");
 const duplicateBtn = document.querySelector("#duplicateBtn");
 const deleteBtn = document.querySelector("#deleteBtn");
 const exportBtn = document.querySelector("#exportBtn");
@@ -18,46 +27,50 @@ const clearBtn = document.querySelector("#clearBtn");
 const roomCatalogs = {
   living: {
     label: "Гостиная",
+    room: { width: 3.2, depth: 4.0, height: 2.7 },
     furniture: [
-      { type: "sofa", label: "Диван", width: 210, height: 92, depth: 34 },
-      { type: "table", label: "Журнальный стол", width: 128, height: 76, depth: 18 },
-      { type: "rug", label: "Ковер", width: 240, height: 140, depth: 6 },
-      { type: "shelf", label: "Стеллаж", width: 96, height: 180, depth: 32 },
-      { type: "cabinet", label: "ТВ-тумба", width: 170, height: 70, depth: 24 },
-      { type: "plant", label: "Растение", width: 72, height: 128, depth: 18 },
+      piece("sofa", "Диван", 210, 92, 34, 220, 95, 85),
+      piece("table", "Журнальный стол", 128, 76, 18, 110, 60, 45),
+      piece("rug", "Ковер", 240, 140, 6, 240, 160, 2),
+      piece("shelf", "Стеллаж", 96, 180, 32, 90, 35, 190),
+      piece("cabinet", "ТВ-тумба", 170, 70, 24, 160, 42, 55),
+      piece("plant", "Растение", 72, 128, 18, 55, 55, 130),
     ],
   },
   bedroom: {
     label: "Спальня",
+    room: { width: 3.0, depth: 3.6, height: 2.7 },
     furniture: [
-      { type: "bed", label: "Кровать", width: 230, height: 150, depth: 30 },
-      { type: "cabinet", label: "Тумба", width: 78, height: 70, depth: 24 },
-      { type: "wardrobe", label: "Шкаф", width: 130, height: 210, depth: 44 },
-      { type: "rug", label: "Ковер", width: 210, height: 120, depth: 6 },
-      { type: "lamp", label: "Торшер", width: 70, height: 150, depth: 18 },
-      { type: "desk", label: "Столик", width: 120, height: 82, depth: 28 },
+      piece("bed", "Кровать", 230, 150, 30, 200, 160, 45),
+      piece("cabinet", "Тумба", 78, 70, 24, 50, 40, 55),
+      piece("wardrobe", "Шкаф", 130, 210, 44, 120, 60, 220),
+      piece("rug", "Ковер", 210, 120, 6, 200, 140, 2),
+      piece("lamp", "Торшер", 70, 150, 18, 45, 45, 160),
+      piece("desk", "Столик", 120, 82, 28, 100, 50, 75),
     ],
   },
   kitchen: {
     label: "Кухня",
+    room: { width: 2.8, depth: 3.2, height: 2.7 },
     furniture: [
-      { type: "table", label: "Обеденный стол", width: 150, height: 92, depth: 28 },
-      { type: "chair", label: "Стул", width: 70, height: 88, depth: 20 },
-      { type: "cabinet", label: "Кухонный модуль", width: 150, height: 96, depth: 36 },
-      { type: "fridge", label: "Холодильник", width: 86, height: 210, depth: 42 },
-      { type: "shelf", label: "Полка", width: 140, height: 56, depth: 22 },
-      { type: "plant", label: "Зелень", width: 64, height: 86, depth: 14 },
+      piece("table", "Обеденный стол", 150, 92, 28, 140, 80, 75),
+      piece("chair", "Стул", 70, 88, 20, 45, 50, 85),
+      piece("cabinet", "Кухонный модуль", 150, 96, 36, 120, 60, 90),
+      piece("fridge", "Холодильник", 86, 210, 42, 60, 65, 200),
+      piece("shelf", "Полка", 140, 56, 22, 120, 25, 35),
+      piece("plant", "Зелень", 64, 86, 14, 35, 35, 55),
     ],
   },
   office: {
     label: "Кабинет",
+    room: { width: 2.6, depth: 3.0, height: 2.7 },
     furniture: [
-      { type: "desk", label: "Рабочий стол", width: 170, height: 86, depth: 30 },
-      { type: "chair", label: "Кресло", width: 88, height: 104, depth: 24 },
-      { type: "shelf", label: "Стеллаж", width: 105, height: 190, depth: 34 },
-      { type: "cabinet", label: "Комод", width: 135, height: 92, depth: 30 },
-      { type: "lamp", label: "Лампа", width: 62, height: 140, depth: 16 },
-      { type: "plant", label: "Растение", width: 72, height: 125, depth: 18 },
+      piece("desk", "Рабочий стол", 170, 86, 30, 140, 70, 75),
+      piece("chair", "Кресло", 88, 104, 24, 65, 65, 95),
+      piece("shelf", "Стеллаж", 105, 190, 34, 90, 35, 200),
+      piece("cabinet", "Комод", 135, 92, 30, 120, 45, 85),
+      piece("lamp", "Лампа", 62, 140, 16, 40, 40, 145),
+      piece("plant", "Растение", 72, 125, 18, 55, 55, 125),
     ],
   },
 };
@@ -70,6 +83,10 @@ let selectedColor = palette[0];
 let roomImage = null;
 let dragState = null;
 
+function piece(type, label, width, height, depth, realWidth, realDepth, realHeight) {
+  return { type, label, width, height, depth, realWidth, realDepth, realHeight };
+}
+
 function renderRoomTypes() {
   roomTypes.innerHTML = "";
   Object.entries(roomCatalogs).forEach(([key, room]) => {
@@ -79,6 +96,7 @@ function renderRoomTypes() {
     button.className = key === currentRoom ? "active" : "";
     button.addEventListener("click", () => {
       currentRoom = key;
+      setRoomDefaults(room.room);
       renderRoomTypes();
       renderCatalog();
       setSelected(null);
@@ -90,11 +108,11 @@ function renderRoomTypes() {
 
 function renderCatalog() {
   catalog.innerHTML = "";
-  roomCatalogs[currentRoom].furniture.forEach((piece) => {
+  roomCatalogs[currentRoom].furniture.forEach((item) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.textContent = piece.label;
-    button.addEventListener("click", () => addItem(piece));
+    button.innerHTML = `<strong>${item.label}</strong><small>${item.realWidth}x${item.realDepth}x${item.realHeight} см</small>`;
+    button.addEventListener("click", () => addItem(item));
     catalog.append(button);
   });
 }
@@ -120,12 +138,26 @@ function renderSwatches() {
   });
 }
 
+function setRoomDefaults(room) {
+  roomWidthInput.value = room.width;
+  roomDepthInput.value = room.depth;
+  roomHeightInput.value = room.height;
+  updateGridLabels();
+}
+
+function updateGridLabels() {
+  gridWidthLabel.textContent = `ширина ${Number(roomWidthInput.value).toFixed(1)} м`;
+  gridDepthLabel.textContent = `глубина ${Number(roomDepthInput.value).toFixed(1)} м`;
+  gridHeightLabel.textContent = `высота ${Number(roomHeightInput.value).toFixed(1)} м`;
+}
+
 function setSelected(item) {
   document.querySelectorAll(".item").forEach((node) => node.classList.remove("selected"));
   selectedItem = item;
 
   if (!item) {
     statusText.textContent = "Выберите объект, чтобы менять размер, глубину и перспективу.";
+    sizeReadout.textContent = "Размеры появятся после выбора мебели.";
     return;
   }
 
@@ -136,16 +168,23 @@ function setSelected(item) {
   rotateRange.value = item.dataset.rotate;
   tiltRange.value = item.dataset.tilt;
   statusText.textContent = `Выбран объект: ${item.dataset.label}.`;
+  updateSizeReadout(item);
 }
 
-function addItem(piece, options = {}) {
+function addItem(template, options = {}) {
   const item = document.createElement("div");
-  item.className = `item ${piece.type}`;
-  item.dataset.type = piece.type;
-  item.dataset.label = piece.label;
-  item.dataset.width = options.width ?? piece.width;
-  item.dataset.height = options.height ?? piece.height;
-  item.dataset.depth = options.depth ?? piece.depth;
+  item.className = `item ${template.type}`;
+  item.dataset.type = template.type;
+  item.dataset.label = template.label;
+  item.dataset.width = options.width ?? template.width;
+  item.dataset.height = options.height ?? template.height;
+  item.dataset.depth = options.depth ?? template.depth;
+  item.dataset.baseWidth = options.baseWidth ?? template.width;
+  item.dataset.baseHeight = options.baseHeight ?? template.height;
+  item.dataset.baseDepth = options.baseDepth ?? template.depth;
+  item.dataset.realWidth = options.realWidth ?? template.realWidth;
+  item.dataset.realDepth = options.realDepth ?? template.realDepth;
+  item.dataset.realHeight = options.realHeight ?? template.realHeight;
   item.dataset.rotate = options.rotate ?? "0";
   item.dataset.tilt = options.tilt ?? "0";
   item.dataset.color = options.color ?? selectedColor;
@@ -155,10 +194,13 @@ function addItem(piece, options = {}) {
   item.innerHTML = `
     <div class="item-top"></div>
     <div class="item-side"></div>
-    <div class="item-face"><span class="item-label"></span></div>
+    <div class="item-face">
+      <span class="item-label"></span>
+      <span class="item-size"></span>
+    </div>
   `;
-  item.querySelector(".item-label").textContent = piece.label;
 
+  item.querySelector(".item-label").textContent = template.label;
   item.addEventListener("pointerdown", startDrag);
   item.addEventListener("click", (event) => {
     event.stopPropagation();
@@ -184,6 +226,30 @@ function apply3DTransform(item) {
   item.style.setProperty("--item-color", color);
   item.style.transform = `perspective(720px) rotateZ(${rotate}deg) rotateX(${tilt}deg)`;
   item.style.zIndex = String(Math.round(parseFloat(item.style.top || "0") + height));
+  item.querySelector(".item-size").textContent = compactSizeText(item);
+  if (item === selectedItem) updateSizeReadout(item);
+}
+
+function estimatedSize(item) {
+  const widthScale = Number(item.dataset.width) / Number(item.dataset.baseWidth);
+  const heightScale = Number(item.dataset.height) / Number(item.dataset.baseHeight);
+  const depthScale = Number(item.dataset.depth) / Math.max(1, Number(item.dataset.baseDepth));
+
+  return {
+    width: Math.round(Number(item.dataset.realWidth) * widthScale),
+    depth: Math.round(Number(item.dataset.realDepth) * depthScale),
+    height: Math.round(Number(item.dataset.realHeight) * heightScale),
+  };
+}
+
+function compactSizeText(item) {
+  const size = estimatedSize(item);
+  return `${size.width}x${size.depth}x${size.height} см`;
+}
+
+function updateSizeReadout(item) {
+  const size = estimatedSize(item);
+  sizeReadout.textContent = `Примерно: ширина ${size.width} см, глубина ${size.depth} см, высота ${size.height} см.`;
 }
 
 function startDrag(event) {
@@ -251,6 +317,9 @@ function duplicateSelected() {
       width: Number(selectedItem.dataset.width),
       height: Number(selectedItem.dataset.height),
       depth: Number(selectedItem.dataset.depth),
+      realWidth: Number(selectedItem.dataset.realWidth),
+      realDepth: Number(selectedItem.dataset.realDepth),
+      realHeight: Number(selectedItem.dataset.realHeight),
     },
     {
       left: parseInt(selectedItem.style.left, 10) + 24,
@@ -258,6 +327,12 @@ function duplicateSelected() {
       color: selectedItem.dataset.color,
       rotate: selectedItem.dataset.rotate,
       tilt: selectedItem.dataset.tilt,
+      baseWidth: selectedItem.dataset.baseWidth,
+      baseHeight: selectedItem.dataset.baseHeight,
+      baseDepth: selectedItem.dataset.baseDepth,
+      realWidth: selectedItem.dataset.realWidth,
+      realDepth: selectedItem.dataset.realDepth,
+      realHeight: selectedItem.dataset.realHeight,
     },
   );
 }
@@ -284,7 +359,6 @@ function exportPng() {
 
   ctx.fillStyle = "#fffdf8";
   ctx.fillRect(0, 0, rect.width, rect.height);
-
   drawRoomImage(ctx, rect);
 
   [...document.querySelectorAll(".item")]
@@ -359,7 +433,9 @@ function draw3DItem(ctx, item) {
   ctx.font = "700 13px Arial";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(label, 0, 0, width - 12);
+  ctx.fillText(label, 0, -7, width - 12);
+  ctx.font = "650 10px Arial";
+  ctx.fillText(compactSizeText(item), 0, 13, width - 12);
   ctx.restore();
 }
 
@@ -407,10 +483,9 @@ roomInput.addEventListener("change", () => {
   reader.onload = () => {
     stage.style.backgroundImage = `url("${reader.result}")`;
     emptyState.style.display = "none";
-
     roomImage = new Image();
     roomImage.src = reader.result;
-    statusText.textContent = "Фото загружено. Добавьте мебель и подгоните ее под перспективу комнаты.";
+    statusText.textContent = "Фото загружено. Используйте 3D-сетку как ориентир пола, стен и глубины комнаты.";
   };
   reader.readAsDataURL(file);
 });
@@ -421,11 +496,18 @@ heightRange.addEventListener("input", updateSelectedDimensions);
 depthRange.addEventListener("input", updateSelectedDimensions);
 rotateRange.addEventListener("input", updateSelectedRotation);
 tiltRange.addEventListener("input", updateSelectedRotation);
+roomWidthInput.addEventListener("input", updateGridLabels);
+roomDepthInput.addEventListener("input", updateGridLabels);
+roomHeightInput.addEventListener("input", updateGridLabels);
+gridToggle.addEventListener("change", () => {
+  perspectiveGrid.classList.toggle("hidden", !gridToggle.checked);
+});
 duplicateBtn.addEventListener("click", duplicateSelected);
 deleteBtn.addEventListener("click", deleteSelected);
 clearBtn.addEventListener("click", clearRoom);
 exportBtn.addEventListener("click", exportPng);
 
+setRoomDefaults(roomCatalogs[currentRoom].room);
 renderRoomTypes();
 renderCatalog();
 renderSwatches();
