@@ -19,6 +19,13 @@ const perspectiveGrid = document.querySelector("#perspectiveGrid");
 const gridWidthLabel = document.querySelector("#gridWidthLabel");
 const gridDepthLabel = document.querySelector("#gridDepthLabel");
 const gridHeightLabel = document.querySelector("#gridHeightLabel");
+const cameraTiltRange = document.querySelector("#cameraTiltRange");
+const cameraYawRange = document.querySelector("#cameraYawRange");
+const cameraZoomRange = document.querySelector("#cameraZoomRange");
+const frontViewBtn = document.querySelector("#frontViewBtn");
+const leftViewBtn = document.querySelector("#leftViewBtn");
+const rightViewBtn = document.querySelector("#rightViewBtn");
+const topViewBtn = document.querySelector("#topViewBtn");
 const duplicateBtn = document.querySelector("#duplicateBtn");
 const deleteBtn = document.querySelector("#deleteBtn");
 const exportBtn = document.querySelector("#exportBtn");
@@ -149,6 +156,23 @@ function updateGridLabels() {
   gridWidthLabel.textContent = `ширина ${Number(roomWidthInput.value).toFixed(1)} м`;
   gridDepthLabel.textContent = `глубина ${Number(roomDepthInput.value).toFixed(1)} м`;
   gridHeightLabel.textContent = `высота ${Number(roomHeightInput.value).toFixed(1)} м`;
+}
+
+function setCamera({ tilt, yaw, zoom }) {
+  if (tilt !== undefined) cameraTiltRange.value = tilt;
+  if (yaw !== undefined) cameraYawRange.value = yaw;
+  if (zoom !== undefined) cameraZoomRange.value = zoom;
+  updateCamera();
+}
+
+function updateCamera() {
+  const tilt = Number(cameraTiltRange.value);
+  const yaw = Number(cameraYawRange.value);
+  const zoom = Number(cameraZoomRange.value) / 100;
+
+  stage.style.setProperty("--camera-tilt", `${tilt}deg`);
+  stage.style.setProperty("--camera-yaw", `${yaw}deg`);
+  stage.style.setProperty("--camera-zoom", zoom);
 }
 
 function setSelected(item) {
@@ -502,6 +526,13 @@ roomHeightInput.addEventListener("input", updateGridLabels);
 gridToggle.addEventListener("change", () => {
   perspectiveGrid.classList.toggle("hidden", !gridToggle.checked);
 });
+cameraTiltRange.addEventListener("input", updateCamera);
+cameraYawRange.addEventListener("input", updateCamera);
+cameraZoomRange.addEventListener("input", updateCamera);
+frontViewBtn.addEventListener("click", () => setCamera({ tilt: 0, yaw: 0, zoom: 100 }));
+leftViewBtn.addEventListener("click", () => setCamera({ tilt: 8, yaw: -24, zoom: 96 }));
+rightViewBtn.addEventListener("click", () => setCamera({ tilt: 8, yaw: 24, zoom: 96 }));
+topViewBtn.addEventListener("click", () => setCamera({ tilt: 30, yaw: 0, zoom: 92 }));
 duplicateBtn.addEventListener("click", duplicateSelected);
 deleteBtn.addEventListener("click", deleteSelected);
 clearBtn.addEventListener("click", clearRoom);
@@ -511,3 +542,4 @@ setRoomDefaults(roomCatalogs[currentRoom].room);
 renderRoomTypes();
 renderCatalog();
 renderSwatches();
+updateCamera();

@@ -82,6 +82,28 @@
           <p class="size-readout" id="sizeReadout">Размеры появятся после выбора мебели.</p>
         </section>
 
+        <section class="panel">
+          <h2>Камера</h2>
+          <div class="camera-presets">
+            <button id="frontViewBtn" type="button">Прямо</button>
+            <button id="leftViewBtn" type="button">Слева</button>
+            <button id="rightViewBtn" type="button">Справа</button>
+            <button id="topViewBtn" type="button">Сверху</button>
+          </div>
+          <label class="range-row">
+            <span>Наклон</span>
+            <input id="cameraTiltRange" type="range" min="-35" max="35" value="0">
+          </label>
+          <label class="range-row">
+            <span>Поворот</span>
+            <input id="cameraYawRange" type="range" min="-35" max="35" value="0">
+          </label>
+          <label class="range-row">
+            <span>Масштаб</span>
+            <input id="cameraZoomRange" type="range" min="80" max="130" value="100">
+          </label>
+        </section>
+
         <div class="actions">
           <button id="duplicateBtn" type="button">Дублировать</button>
           <button id="deleteBtn" type="button">Удалить</button>
