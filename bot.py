@@ -17,7 +17,6 @@ PORT = int(PORT_VALUE or "10000")
 RUN_AS_WEB_SERVICE = bool(PORT_VALUE or WEBHOOK_URL or os.getenv("RENDER"))
 
 API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
-
 SESSIONS = {}
 
 TASKS = {
@@ -55,8 +54,7 @@ def request(method, payload=None):
     )
 
     with urllib.request.urlopen(req, timeout=30) as response:
-        body = response.read().decode("utf-8")
-        return json.loads(body)
+        return json.loads(response.read().decode("utf-8"))
 
 
 def send_message(chat_id, text, keyboard=None):
@@ -74,24 +72,32 @@ def answer_callback(callback_query_id):
     return request("answerCallbackQuery", {"callback_query_id": callback_query_id})
 
 
+def main_keyboard():
+    keyboard = [
+        [{"text": "🌃 Новая комната", "callback_data": "menu:new_room"}],
+        [
+            {"text": "🗂️ Мои проекты", "callback_data": "menu:projects"},
+            {"text": "ℹ️ Помощь", "callback_data": "menu:help"},
+        ],
+        [{"text": "📷 Отправить фото комнаты", "callback_data": "menu:send_photo"}],
+    ]
+
+    if SITE_URL:
+        button = {"text": "🚀 Открыть DOMIX AI"}
+        if SITE_URL.startswith("https://"):
+            button["web_app"] = {"url": SITE_URL}
+        else:
+            button["url"] = SITE_URL
+        keyboard.insert(1, [button])
+
+    return keyboard
+
+
 def task_keyboard():
     return [
         [{"text": label, "callback_data": f"task:{key}"}]
         for key, label in TASKS.items()
     ]
-
-
-def editor_keyboard():
-    if not SITE_URL:
-        return None
-
-    button = {"text": "Открыть редактор комнаты"}
-    if SITE_URL.startswith("https://"):
-        button["web_app"] = {"url": SITE_URL}
-    else:
-        button["url"] = SITE_URL
-
-    return [[button]]
 
 
 def style_keyboard():
@@ -116,16 +122,19 @@ def get_session(chat_id):
             "task": None,
             "style": None,
             "budget": None,
+            "projects": [],
         },
     )
 
 
 def reset_session(chat_id):
+    old_projects = get_session(chat_id).get("projects", [])
     SESSIONS[chat_id] = {
         "photo_file_id": None,
         "task": None,
         "style": None,
         "budget": None,
+        "projects": old_projects,
     }
 
 
@@ -150,7 +159,7 @@ def build_design_brief(session):
     }
 
     return (
-        "<b>Готово. Черновик дизайн-задания:</b>\n\n"
+        "<b>DOMIX AI: черновик дизайн-задания</b>\n\n"
         f"<b>Задача:</b> {task}\n"
         f"<b>Стиль:</b> {style}\n"
         f"<b>Бюджет:</b> {budget}\n\n"
@@ -158,8 +167,7 @@ def build_design_brief(session):
         f"{furniture.get(budget, furniture['средний'])}\n\n"
         "<b>Промпт для генерации визуала:</b>\n"
         f"<code>{prompt}</code>\n\n"
-        "В нулевой версии я собираю заявку и готовлю ТЗ. Следующий шаг MVP - "
-        "подключить генерацию изображений, когда появится бюджет на API или локальная модель."
+        "Для ручной 3D-расстановки мебели откройте редактор DOMIX AI."
     )
 
 
@@ -173,7 +181,7 @@ def notify_admin(user, session):
     )
     contact = f"@{username}" if username else name or str(user.get("id"))
     text = (
-        "Новая заявка на интерьер:\n\n"
+        "Новая заявка DOMIX AI:\n\n"
         f"Пользователь: {contact}\n"
         f"Задача: {TASKS.get(session['task'])}\n"
         f"Стиль: {STYLES.get(session['style'])}\n"
@@ -183,17 +191,54 @@ def notify_admin(user, session):
     send_message(ADMIN_CHAT_ID, text)
 
 
+def start_text():
+    return (
+        "<b>DOMIX AI</b> — AI-платформа для кастомизации интерьеров.\n\n"
+        "Вы можете отправить фото комнаты, получить дизайн-задание или открыть редактор, "
+        "чтобы вручную расставить мебель, подогнать размеры и получить расчет материалов."
+    )
+
+
+def help_text():
+    return (
+        "<b>Как пользоваться DOMIX AI</b>\n\n"
+        "1. Нажмите “Открыть DOMIX AI”.\n"
+        "2. Загрузите фото комнаты на сайте.\n"
+        "3. Выберите тип комнаты и добавьте мебель.\n"
+        "4. Подгоните размер, глубину и камеру.\n"
+        "5. Нажмите “Сохранить PNG”, чтобы получить картинку и материалы.\n\n"
+        "Также можете отправить фото прямо в бот, и он соберет краткое дизайн-задание."
+    )
+
+
+def projects_text(session):
+    projects = session.get("projects", [])
+    if not projects:
+        return (
+            "<b>Мои проекты</b>\n\n"
+            "Пока здесь нет сохраненных заявок. Отправьте фото комнаты и выберите стиль — "
+            "бот сохранит краткую карточку проекта в текущей сессии."
+        )
+
+    lines = ["<b>Мои проекты</b>\n"]
+    for index, project in enumerate(projects[-5:], start=1):
+        lines.append(
+            f"{index}. {project['task']} · {project['style']} · бюджет: {project['budget']}"
+        )
+    return "\n".join(lines)
+
+
 def handle_message(message):
     chat_id = message["chat"]["id"]
     text = message.get("text", "")
 
     if text == "/start":
         reset_session(chat_id)
-        send_message(
-            chat_id,
-            "Привет. Отправьте фото комнаты, а я соберу дизайн-задание и промпт для визуала. Или откройте редактор, чтобы расставить мебель вручную.",
-            editor_keyboard(),
-        )
+        send_message(chat_id, start_text(), main_keyboard())
+        return
+
+    if text == "/help":
+        send_message(chat_id, help_text(), main_keyboard())
         return
 
     if "photo" in message:
@@ -203,7 +248,32 @@ def handle_message(message):
         send_message(chat_id, "Фото получил. Что хотите сделать?", task_keyboard())
         return
 
-    send_message(chat_id, "Отправьте фото комнаты или нажмите /start.")
+    send_message(chat_id, "Нажмите кнопку ниже или отправьте фото комнаты.", main_keyboard())
+
+
+def handle_menu(chat_id, value):
+    session = get_session(chat_id)
+
+    if value == "new_room":
+        reset_session(chat_id)
+        send_message(
+            chat_id,
+            "Новая комната создана. Отправьте фото или откройте редактор DOMIX AI.",
+            main_keyboard(),
+        )
+        return
+
+    if value == "projects":
+        send_message(chat_id, projects_text(session), main_keyboard())
+        return
+
+    if value == "help":
+        send_message(chat_id, help_text(), main_keyboard())
+        return
+
+    if value == "send_photo":
+        send_message(chat_id, "Отправьте фото комнаты одним сообщением. После этого я предложу варианты действий.")
+        return
 
 
 def handle_callback(callback):
@@ -215,6 +285,10 @@ def handle_callback(callback):
     session = get_session(chat_id)
 
     kind, value = data.split(":", 1)
+
+    if kind == "menu":
+        handle_menu(chat_id, value)
+        return
 
     if kind == "task":
         session["task"] = value
@@ -228,8 +302,15 @@ def handle_callback(callback):
 
     if kind == "budget":
         session["budget"] = value
+        session.setdefault("projects", []).append(
+            {
+                "task": TASKS.get(session["task"], "Интерьер"),
+                "style": STYLES.get(session["style"], "Современный"),
+                "budget": BUDGETS.get(session["budget"], "средний"),
+            }
+        )
         brief = build_design_brief(session)
-        send_message(chat_id, brief)
+        send_message(chat_id, brief, main_keyboard())
         notify_admin(user, session)
         return
 
@@ -255,8 +336,8 @@ def set_webhook():
 
 class TelegramWebhookHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        if self.path == "/" or self.path == "/health":
-            self.respond(200, {"ok": True, "service": "interior-designer-bot"})
+        if self.path in {"/", "/health"}:
+            self.respond(200, {"ok": True, "service": "domix-ai-bot"})
             return
         self.respond(404, {"ok": False, "error": "not found"})
 
@@ -276,12 +357,11 @@ class TelegramWebhookHandler(BaseHTTPRequestHandler):
         raw_body = self.rfile.read(content_length)
 
         try:
-            update = json.loads(raw_body.decode("utf-8"))
-            handle_update(update)
-            self.respond(200, {"ok": True})
+            handle_update(json.loads(raw_body.decode("utf-8")))
         except Exception as exc:
             print(f"Webhook error: {exc}")
-            self.respond(200, {"ok": True})
+
+        self.respond(200, {"ok": True})
 
     def log_message(self, format, *args):
         return
@@ -299,8 +379,7 @@ def run_webhook_server():
     if not BOT_TOKEN:
         print("TELEGRAM_BOT_TOKEN is not set. Health server is running, but bot is inactive.")
     elif WEBHOOK_URL:
-        result = set_webhook()
-        print(f"Webhook set: {result}")
+        print(f"Webhook set: {set_webhook()}")
     else:
         print("WEBHOOK_URL is not set yet. Server is running without Telegram webhook.")
 
@@ -311,7 +390,7 @@ def run_webhook_server():
 
 def run_polling():
     offset = None
-    print("Bot is running locally. Press Ctrl+C to stop.")
+    print("DOMIX AI bot is running locally. Press Ctrl+C to stop.")
 
     while True:
         try:

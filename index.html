@@ -7,10 +7,16 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
+    <nav class="quick-nav" aria-label="Быстрые действия">
+      <button id="newRoomBtn" type="button">🌃 Новая комната</button>
+      <button id="projectsBtn" type="button">🗂️ Мои проекты</button>
+      <button id="helpBtn" type="button">ℹ️ Помощь</button>
+    </nav>
+
     <main class="app">
       <aside class="sidebar">
         <div class="brand">
-          <div class="brand-mark">R</div>
+          <div class="brand-mark">DAI</div>
           <div>
             <h1>DOMIX AI</h1>
             <p>Интерьерный редактор</p>
@@ -150,6 +156,36 @@
         </section>
       </section>
     </main>
+
+    <div class="dialog hidden" id="projectsDialog" role="dialog" aria-modal="true" aria-label="Мои проекты">
+      <div class="dialog-panel">
+        <div class="dialog-header">
+          <h2>Мои проекты</h2>
+          <button class="icon-btn" id="closeProjectsBtn" type="button">×</button>
+        </div>
+        <p>Сохраните текущую расстановку в браузере или загрузите последний проект.</p>
+        <div class="dialog-actions">
+          <button id="saveProjectBtn" type="button">Сохранить проект</button>
+          <button id="loadProjectBtn" type="button">Загрузить проект</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="dialog hidden" id="helpDialog" role="dialog" aria-modal="true" aria-label="Помощь">
+      <div class="dialog-panel">
+        <div class="dialog-header">
+          <h2>Помощь</h2>
+          <button class="icon-btn" id="closeHelpBtn" type="button">×</button>
+        </div>
+        <div class="help-list">
+          <p>1. Загрузите фото комнаты.</p>
+          <p>2. Выберите тип комнаты и добавьте мебель.</p>
+          <p>3. Двигайте мебель, меняйте размер, глубину и перспективу.</p>
+          <p>4. Зажмите пустое место на фото и двигайте курсор, чтобы менять обзор.</p>
+          <p>5. Нажмите “Сохранить PNG”, чтобы получить картинку и расчет материалов.</p>
+        </div>
+      </div>
+    </div>
 
     <script src="app.js"></script>
   </body>

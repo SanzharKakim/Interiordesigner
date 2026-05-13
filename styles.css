@@ -26,10 +26,36 @@ input {
   font: inherit;
 }
 
+.quick-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 7px 4px 10px;
+  background: #263039;
+}
+
+.quick-nav button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 8px;
+  background: #3a444d;
+  color: #fff;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.quick-nav button:first-child {
+  grid-column: 1 / -1;
+}
+
+.quick-nav button:hover {
+  background: #46515b;
+}
+
 .app {
   display: grid;
   grid-template-columns: 336px minmax(0, 1fr);
-  min-height: 100vh;
+  min-height: calc(100vh - 93px);
 }
 
 .sidebar {
@@ -50,12 +76,13 @@ input {
 .brand-mark {
   display: grid;
   place-items: center;
-  width: 42px;
+  width: 48px;
   height: 42px;
   border-radius: 8px;
   background: var(--accent);
   color: #fff;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 850;
 }
 
 h1,
@@ -330,6 +357,68 @@ p {
   background: #eef6f4;
 }
 
+.dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(18, 24, 28, 0.48);
+}
+
+.dialog.hidden {
+  display: none;
+}
+
+.dialog-panel {
+  display: grid;
+  gap: 14px;
+  width: min(100%, 460px);
+  padding: 18px;
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.dialog-actions button {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+.help-list {
+  display: grid;
+  gap: 8px;
+}
+
 .material-card h3 {
   margin: 0;
   font-size: 14px;
@@ -584,8 +673,17 @@ p {
 }
 
 @media (max-width: 900px) {
+  .quick-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-nav button:first-child {
+    grid-column: auto;
+  }
+
   .app {
     grid-template-columns: 1fr;
+    min-height: auto;
   }
 
   .sidebar {
