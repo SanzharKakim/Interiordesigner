@@ -2,13 +2,19 @@ import json
 import os
 import time
 import urllib.error
-import urllib.parse
 import urllib.request
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
 ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID", "").strip()
 SITE_URL = os.getenv("SITE_URL", "").strip()
+WEBHOOK_URL = os.getenv("WEBHOOK_URL", "").strip().rstrip("/")
+WEBHOOK_PATH = os.getenv("WEBHOOK_PATH", "/telegram-webhook").strip()
+WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", "").strip()
+PORT_VALUE = os.getenv("PORT", "").strip()
+PORT = int(PORT_VALUE or "10000")
+RUN_AS_WEB_SERVICE = bool(PORT_VALUE or WEBHOOK_URL or os.getenv("RENDER"))
 
 API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
@@ -228,12 +234,84 @@ def handle_callback(callback):
         return
 
 
-def main():
-    if not BOT_TOKEN:
-        raise SystemExit("Set TELEGRAM_BOT_TOKEN before running the bot.")
+def handle_update(update):
+    if "message" in update:
+        handle_message(update["message"])
+    elif "callback_query" in update:
+        handle_callback(update["callback_query"])
 
+
+def webhook_target_url():
+    path = WEBHOOK_PATH if WEBHOOK_PATH.startswith("/") else f"/{WEBHOOK_PATH}"
+    return f"{WEBHOOK_URL}{path}"
+
+
+def set_webhook():
+    payload = {"url": webhook_target_url()}
+    if WEBHOOK_SECRET:
+        payload["secret_token"] = WEBHOOK_SECRET
+    return request("setWebhook", payload)
+
+
+class TelegramWebhookHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == "/" or self.path == "/health":
+            self.respond(200, {"ok": True, "service": "interior-designer-bot"})
+            return
+        self.respond(404, {"ok": False, "error": "not found"})
+
+    def do_POST(self):
+        expected_path = WEBHOOK_PATH if WEBHOOK_PATH.startswith("/") else f"/{WEBHOOK_PATH}"
+        if self.path != expected_path:
+            self.respond(404, {"ok": False, "error": "not found"})
+            return
+
+        if WEBHOOK_SECRET:
+            received_secret = self.headers.get("X-Telegram-Bot-Api-Secret-Token", "")
+            if received_secret != WEBHOOK_SECRET:
+                self.respond(403, {"ok": False, "error": "forbidden"})
+                return
+
+        content_length = int(self.headers.get("Content-Length", "0"))
+        raw_body = self.rfile.read(content_length)
+
+        try:
+            update = json.loads(raw_body.decode("utf-8"))
+            handle_update(update)
+            self.respond(200, {"ok": True})
+        except Exception as exc:
+            print(f"Webhook error: {exc}")
+            self.respond(200, {"ok": True})
+
+    def log_message(self, format, *args):
+        return
+
+    def respond(self, status_code, payload):
+        body = json.dumps(payload).encode("utf-8")
+        self.send_response(status_code)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+
+def run_webhook_server():
+    if not BOT_TOKEN:
+        print("TELEGRAM_BOT_TOKEN is not set. Health server is running, but bot is inactive.")
+    elif WEBHOOK_URL:
+        result = set_webhook()
+        print(f"Webhook set: {result}")
+    else:
+        print("WEBHOOK_URL is not set yet. Server is running without Telegram webhook.")
+
+    server = HTTPServer(("0.0.0.0", PORT), TelegramWebhookHandler)
+    print(f"Webhook server is running on port {PORT}.")
+    server.serve_forever()
+
+
+def run_polling():
     offset = None
-    print("Bot is running. Press Ctrl+C to stop.")
+    print("Bot is running locally. Press Ctrl+C to stop.")
 
     while True:
         try:
@@ -244,10 +322,7 @@ def main():
 
             for update in updates:
                 offset = update["update_id"] + 1
-                if "message" in update:
-                    handle_message(update["message"])
-                elif "callback_query" in update:
-                    handle_callback(update["callback_query"])
+                handle_update(update)
 
         except urllib.error.URLError as exc:
             print(f"Network error: {exc}")
@@ -255,6 +330,16 @@ def main():
         except KeyboardInterrupt:
             print("Bot stopped.")
             break
+
+
+def main():
+    if not BOT_TOKEN and not RUN_AS_WEB_SERVICE:
+        raise SystemExit("Set TELEGRAM_BOT_TOKEN before running the bot.")
+
+    if RUN_AS_WEB_SERVICE:
+        run_webhook_server()
+    else:
+        run_polling()
 
 
 if __name__ == "__main__":
