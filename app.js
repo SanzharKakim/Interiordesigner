@@ -423,9 +423,17 @@ function buildMaterialsHtml() {
     return '<div class="material-card"><h3>Мебель не добавлена</h3><p>Добавьте предметы на фото, чтобы получить расчет материалов.</p></div>';
   }
 
-  return items.map((item, index) => {
+  const totals = {
+    sheet: 0,
+    fabric: 0,
+    filler: 0,
+    carpet: 0,
+    edging: 0,
+  };
+
+  const cards = items.map((item, index) => {
     const size = estimatedSize(item);
-    const materials = estimateMaterials(item, size);
+    const materials = estimateMaterials(item, size, totals);
     return `
       <article class="material-card">
         <h3>${index + 1}. ${item.dataset.label}</h3>
@@ -434,9 +442,19 @@ function buildMaterialsHtml() {
       </article>
     `;
   }).join("");
+
+  return `
+    <article class="material-card material-summary">
+      <h3>Итого по проекту</h3>
+      <p><b>Предметов мебели:</b> ${items.length}</p>
+      <p><b>Плитный материал:</b> ${formatNumber(totals.sheet)} м² · <b>Ткань:</b> ${formatNumber(totals.fabric)} м² · <b>Наполнитель:</b> ${formatNumber(totals.filler)} м³</p>
+      <p><b>Ковровое покрытие:</b> ${formatNumber(totals.carpet)} м² · <b>Кромка/окантовка:</b> ${formatNumber(totals.edging)} м</p>
+    </article>
+    ${cards}
+  `;
 }
 
-function estimateMaterials(item, size) {
+function estimateMaterials(item, size, totals) {
   const type = item.dataset.type;
   const w = size.width / 100;
   const d = size.depth / 100;
@@ -445,15 +463,27 @@ function estimateMaterials(item, size) {
   const footprint = w * d;
 
   if (type === "rug") {
+    totals.carpet += footprint;
+    totals.edging += 2 * (w + d);
     return `ковровое покрытие ${formatNumber(footprint)} м², окантовка ${formatNumber(2 * (w + d))} м`;
   }
 
   if (["sofa", "chair", "bed"].includes(type)) {
-    return `обивочная ткань ${formatNumber(surfaceArea * 0.75)} м², наполнитель ${formatNumber(w * d * Math.max(h, 0.35))} м³, каркас ${formatNumber(surfaceArea * 0.32)} м²`;
+    const fabric = surfaceArea * 0.75;
+    const filler = w * d * Math.max(h, 0.35);
+    const sheet = surfaceArea * 0.32;
+    totals.fabric += fabric;
+    totals.filler += filler;
+    totals.sheet += sheet;
+    return `обивочная ткань ${formatNumber(fabric)} м², наполнитель ${formatNumber(filler)} м³, каркас ${formatNumber(sheet)} м²`;
   }
 
   if (["cabinet", "shelf", "wardrobe", "desk", "table"].includes(type)) {
-    return `плитный материал ${formatNumber(surfaceArea * 0.82)} м², кромка ${formatNumber(4 * (w + d + h))} м, фурнитура 1 комплект`;
+    const sheet = surfaceArea * 0.82;
+    const edging = 4 * (w + d + h);
+    totals.sheet += sheet;
+    totals.edging += edging;
+    return `плитный материал ${formatNumber(sheet)} м², кромка ${formatNumber(edging)} м, фурнитура 1 комплект`;
   }
 
   if (type === "lamp") {
@@ -468,6 +498,7 @@ function estimateMaterials(item, size) {
     return `габаритный корпус ${formatNumber(w * d * h)} м³, фасадная площадь ${formatNumber(w * h)} м²`;
   }
 
+  totals.sheet += surfaceArea * 0.7;
   return `основной материал ${formatNumber(surfaceArea * 0.7)} м², объем ${formatNumber(w * d * h)} м³`;
 }
 

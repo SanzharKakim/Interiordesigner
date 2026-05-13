@@ -325,6 +325,11 @@ p {
   background: var(--paper);
 }
 
+.material-summary {
+  border-color: rgba(47, 111, 115, 0.38);
+  background: #eef6f4;
+}
+
 .material-card h3 {
   margin: 0;
   font-size: 14px;
