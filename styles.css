@@ -266,6 +266,75 @@ p {
   padding: 26px;
 }
 
+.result-panel {
+  margin: 0 26px 26px;
+  padding: 16px;
+  border-top: 1px solid var(--line);
+  background: rgba(255, 253, 248, 0.72);
+}
+
+.result-panel.hidden {
+  display: none;
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.result-header a {
+  display: inline-grid;
+  place-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.95fr) minmax(280px, 1.05fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.result-grid img {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+}
+
+.materials-list {
+  display: grid;
+  gap: 10px;
+}
+
+.material-card {
+  display: grid;
+  gap: 6px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+}
+
+.material-card h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.material-card p {
+  color: var(--ink);
+  line-height: 1.4;
+}
+
 .stage {
   position: relative;
   overflow: hidden;
@@ -525,5 +594,13 @@ p {
 
   .stage-wrap {
     padding: 14px;
+  }
+
+  .result-panel {
+    margin: 0 14px 14px;
+  }
+
+  .result-grid {
+    grid-template-columns: 1fr;
   }
 }

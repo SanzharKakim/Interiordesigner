@@ -27,6 +27,10 @@ const frontViewBtn = document.querySelector("#frontViewBtn");
 const leftViewBtn = document.querySelector("#leftViewBtn");
 const rightViewBtn = document.querySelector("#rightViewBtn");
 const topViewBtn = document.querySelector("#topViewBtn");
+const resultPanel = document.querySelector("#resultPanel");
+const resultImage = document.querySelector("#resultImage");
+const materialsList = document.querySelector("#materialsList");
+const downloadResultLink = document.querySelector("#downloadResultLink");
 const duplicateBtn = document.querySelector("#duplicateBtn");
 const deleteBtn = document.querySelector("#deleteBtn");
 const exportBtn = document.querySelector("#exportBtn");
@@ -395,10 +399,106 @@ function exportPng() {
     .sort((a, b) => Number(a.style.zIndex) - Number(b.style.zIndex))
     .forEach((item) => draw3DItem(ctx, item));
 
+  drawRoomDimensions(ctx, rect);
+
+  const imageUrl = canvas.toDataURL("image/png");
   const link = document.createElement("a");
   link.download = "roomdraft.png";
-  link.href = canvas.toDataURL("image/png");
+  link.href = imageUrl;
   link.click();
+  showResult(imageUrl);
+}
+
+function showResult(imageUrl) {
+  resultImage.src = imageUrl;
+  downloadResultLink.href = imageUrl;
+  materialsList.innerHTML = buildMaterialsHtml();
+  resultPanel.classList.remove("hidden");
+  resultPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function buildMaterialsHtml() {
+  const items = [...document.querySelectorAll(".item")];
+  if (!items.length) {
+    return '<div class="material-card"><h3>Мебель не добавлена</h3><p>Добавьте предметы на фото, чтобы получить расчет материалов.</p></div>';
+  }
+
+  return items.map((item, index) => {
+    const size = estimatedSize(item);
+    const materials = estimateMaterials(item, size);
+    return `
+      <article class="material-card">
+        <h3>${index + 1}. ${item.dataset.label}</h3>
+        <p><b>Размеры:</b> Длина: ${size.depth} см · Ширина: ${size.width} см · Высота: ${size.height} см</p>
+        <p><b>Материалы:</b> ${materials}</p>
+      </article>
+    `;
+  }).join("");
+}
+
+function estimateMaterials(item, size) {
+  const type = item.dataset.type;
+  const w = size.width / 100;
+  const d = size.depth / 100;
+  const h = size.height / 100;
+  const surfaceArea = 2 * (w * d + w * h + d * h);
+  const footprint = w * d;
+
+  if (type === "rug") {
+    return `ковровое покрытие ${formatNumber(footprint)} м², окантовка ${formatNumber(2 * (w + d))} м`;
+  }
+
+  if (["sofa", "chair", "bed"].includes(type)) {
+    return `обивочная ткань ${formatNumber(surfaceArea * 0.75)} м², наполнитель ${formatNumber(w * d * Math.max(h, 0.35))} м³, каркас ${formatNumber(surfaceArea * 0.32)} м²`;
+  }
+
+  if (["cabinet", "shelf", "wardrobe", "desk", "table"].includes(type)) {
+    return `плитный материал ${formatNumber(surfaceArea * 0.82)} м², кромка ${formatNumber(4 * (w + d + h))} м, фурнитура 1 комплект`;
+  }
+
+  if (type === "lamp") {
+    return `корпус/стойка ${formatNumber(h)} м, основание ${formatNumber(footprint)} м², электрика 1 комплект`;
+  }
+
+  if (type === "plant") {
+    return `кашпо ${formatNumber(w * d * h)} м³, декоративный наполнитель ${formatNumber(footprint)} м²`;
+  }
+
+  if (type === "fridge") {
+    return `габаритный корпус ${formatNumber(w * d * h)} м³, фасадная площадь ${formatNumber(w * h)} м²`;
+  }
+
+  return `основной материал ${formatNumber(surfaceArea * 0.7)} м², объем ${formatNumber(w * d * h)} м³`;
+}
+
+function formatNumber(value) {
+  return value.toFixed(2).replace(".", ",");
+}
+
+function drawRoomDimensions(ctx, rect) {
+  const width = Number(roomWidthInput.value).toFixed(1);
+  const depth = Number(roomDepthInput.value).toFixed(1);
+  const height = Number(roomHeightInput.value).toFixed(1);
+  const text = `Длина: ${depth} м · Ширина: ${width} м · Высота: ${height} м`;
+
+  ctx.save();
+  ctx.font = "700 14px Arial";
+  const textWidth = ctx.measureText(text).width;
+  const boxWidth = Math.min(rect.width - 24, textWidth + 24);
+  const boxHeight = 34;
+  const x = (rect.width - boxWidth) / 2;
+  const y = rect.height - boxHeight - 12;
+
+  ctx.fillStyle = "rgba(255,253,248,0.92)";
+  roundRect(ctx, x, y, boxWidth, boxHeight, 8);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(47,111,115,0.28)";
+  ctx.stroke();
+  ctx.fillStyle = "#20565a";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, rect.width / 2, y + boxHeight / 2, boxWidth - 18);
+  ctx.restore();
 }
 
 function drawRoomImage(ctx, rect) {
@@ -464,8 +564,6 @@ function draw3DItem(ctx, item) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(label, 0, -7, width - 12);
-  ctx.font = "650 10px Arial";
-  ctx.fillText(compactSizeText(item), 0, 13, width - 12);
   ctx.restore();
 }
 
