@@ -403,7 +403,7 @@ function exportPng() {
 
   const imageUrl = canvas.toDataURL("image/png");
   const link = document.createElement("a");
-  link.download = "roomdraft.png";
+  link.download = "domix-ai-room.png";
   link.href = imageUrl;
   link.click();
   showResult(imageUrl);
