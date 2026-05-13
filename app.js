@@ -41,11 +41,14 @@ const resultImage = document.querySelector("#resultImage");
 const materialsList = document.querySelector("#materialsList");
 const downloadResultLink = document.querySelector("#downloadResultLink");
 const openResultLink = document.querySelector("#openResultLink");
+const sendToTelegramBtn = document.querySelector("#sendToTelegramBtn");
 const duplicateBtn = document.querySelector("#duplicateBtn");
 const deleteBtn = document.querySelector("#deleteBtn");
 const exportBtn = document.querySelector("#exportBtn");
 const clearBtn = document.querySelector("#clearBtn");
 const PROJECT_STORAGE_KEY = "domix-ai-project";
+const BOT_SUBMIT_URL = "https://interiordesigner-t8ny.onrender.com/submit-project";
+let lastResultImageUrl = "";
 
 const roomCatalogs = {
   living: {
@@ -501,12 +504,55 @@ function exportPng() {
 }
 
 function showResult(imageUrl) {
+  lastResultImageUrl = imageUrl;
   resultImage.src = imageUrl;
   downloadResultLink.href = imageUrl;
   openResultLink.href = imageUrl;
   materialsList.innerHTML = buildMaterialsHtml();
   resultPanel.classList.remove("hidden");
   resultPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function sendResultToTelegram() {
+  if (!lastResultImageUrl) {
+    statusText.textContent = "Сначала нажмите “Сохранить PNG”, чтобы подготовить проект.";
+    return;
+  }
+
+  const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+  const chatId = telegramUser?.id;
+
+  if (!chatId) {
+    statusText.textContent = "Откройте DOMIX AI через кнопку в Telegram-боте, чтобы отправить проект в чат.";
+    return;
+  }
+
+  sendToTelegramBtn.disabled = true;
+  sendToTelegramBtn.textContent = "Отправляю...";
+
+  try {
+    const response = await fetch(BOT_SUBMIT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        image_data: lastResultImageUrl,
+        report: buildProjectReportText(),
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Telegram submit failed");
+    }
+
+    statusText.textContent = "Готовый проект отправлен в Telegram-чат.";
+    window.Telegram?.WebApp?.showAlert?.("Проект отправлен в чат.");
+  } catch (error) {
+    statusText.textContent = "Не получилось отправить проект в Telegram. Проверьте, что бот на Render обновлен.";
+  } finally {
+    sendToTelegramBtn.disabled = false;
+    sendToTelegramBtn.textContent = "Отправить в чат";
+  }
 }
 
 function buildMaterialsHtml() {
@@ -544,6 +590,54 @@ function buildMaterialsHtml() {
     </article>
     ${cards}
   `;
+}
+
+function buildProjectReportText() {
+  const items = [...document.querySelectorAll(".item")];
+  const roomLine = `Комната: Длина ${Number(roomDepthInput.value).toFixed(1)} м, Ширина ${Number(roomWidthInput.value).toFixed(1)} м, Высота ${Number(roomHeightInput.value).toFixed(1)} м`;
+
+  if (!items.length) {
+    return `DOMIX AI. Готовый проект\n\n${roomLine}\n\nМебель не добавлена.`;
+  }
+
+  const totals = {
+    sheet: 0,
+    fabric: 0,
+    filler: 0,
+    carpet: 0,
+    edging: 0,
+  };
+
+  const lines = [
+    "DOMIX AI. Готовый проект",
+    "",
+    roomLine,
+    "",
+    "Мебель и материалы:",
+  ];
+
+  items.forEach((item, index) => {
+    const size = estimatedSize(item);
+    const materials = estimateMaterials(item, size, totals);
+    lines.push(
+      `${index + 1}. ${item.dataset.label}`,
+      `Размеры: Длина ${size.depth} см, Ширина ${size.width} см, Высота ${size.height} см`,
+      `Материалы: ${materials}`,
+      "",
+    );
+  });
+
+  lines.push(
+    "Итого:",
+    `Предметов мебели: ${items.length}`,
+    `Плитный материал: ${formatNumber(totals.sheet)} м²`,
+    `Ткань: ${formatNumber(totals.fabric)} м²`,
+    `Наполнитель: ${formatNumber(totals.filler)} м³`,
+    `Ковровое покрытие: ${formatNumber(totals.carpet)} м²`,
+    `Кромка/окантовка: ${formatNumber(totals.edging)} м`,
+  );
+
+  return lines.join("\n");
 }
 
 function estimateMaterials(item, size, totals) {
@@ -778,6 +872,7 @@ duplicateBtn.addEventListener("click", duplicateSelected);
 deleteBtn.addEventListener("click", deleteSelected);
 clearBtn.addEventListener("click", clearRoom);
 exportBtn.addEventListener("click", exportPng);
+sendToTelegramBtn.addEventListener("click", sendResultToTelegram);
 
 setRoomDefaults(roomCatalogs[currentRoom].room);
 renderRoomTypes();

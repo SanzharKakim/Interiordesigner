@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import time
 import urllib.error
 import urllib.request
@@ -57,6 +58,39 @@ def request(method, payload=None):
         return json.loads(response.read().decode("utf-8"))
 
 
+def multipart_request(method, fields, files):
+    boundary = "----DomixAiBoundary"
+    body = bytearray()
+
+    for name, value in fields.items():
+        body.extend(f"--{boundary}\r\n".encode("utf-8"))
+        body.extend(f'Content-Disposition: form-data; name="{name}"\r\n\r\n'.encode("utf-8"))
+        body.extend(str(value).encode("utf-8"))
+        body.extend(b"\r\n")
+
+    for name, file_info in files.items():
+        filename, content_type, content = file_info
+        body.extend(f"--{boundary}\r\n".encode("utf-8"))
+        body.extend(
+            f'Content-Disposition: form-data; name="{name}"; filename="{filename}"\r\n'.encode("utf-8")
+        )
+        body.extend(f"Content-Type: {content_type}\r\n\r\n".encode("utf-8"))
+        body.extend(content)
+        body.extend(b"\r\n")
+
+    body.extend(f"--{boundary}--\r\n".encode("utf-8"))
+
+    req = urllib.request.Request(
+        f"{API_URL}/{method}",
+        data=bytes(body),
+        headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
+        method="POST",
+    )
+
+    with urllib.request.urlopen(req, timeout=60) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
 def send_message(chat_id, text, keyboard=None):
     payload = {
         "chat_id": chat_id,
@@ -66,6 +100,17 @@ def send_message(chat_id, text, keyboard=None):
     if keyboard:
         payload["reply_markup"] = {"inline_keyboard": keyboard}
     return request("sendMessage", payload)
+
+
+def send_photo(chat_id, image_bytes, caption=None):
+    fields = {"chat_id": chat_id}
+    if caption:
+        fields["caption"] = caption[:1024]
+    return multipart_request(
+        "sendPhoto",
+        fields,
+        {"photo": ("domix-ai-room.png", "image/png", image_bytes)},
+    )
 
 
 def answer_callback(callback_query_id):
@@ -335,6 +380,11 @@ def set_webhook():
 
 
 class TelegramWebhookHandler(BaseHTTPRequestHandler):
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_cors_headers()
+        self.end_headers()
+
     def do_GET(self):
         if self.path in {"/", "/health"}:
             self.respond(200, {"ok": True, "service": "domix-ai-bot"})
@@ -342,6 +392,10 @@ class TelegramWebhookHandler(BaseHTTPRequestHandler):
         self.respond(404, {"ok": False, "error": "not found"})
 
     def do_POST(self):
+        if self.path == "/submit-project":
+            self.handle_project_submit()
+            return
+
         expected_path = WEBHOOK_PATH if WEBHOOK_PATH.startswith("/") else f"/{WEBHOOK_PATH}"
         if self.path != expected_path:
             self.respond(404, {"ok": False, "error": "not found"})
@@ -363,16 +417,76 @@ class TelegramWebhookHandler(BaseHTTPRequestHandler):
 
         self.respond(200, {"ok": True})
 
+    def handle_project_submit(self):
+        content_length = int(self.headers.get("Content-Length", "0"))
+        raw_body = self.rfile.read(content_length)
+
+        try:
+            payload = json.loads(raw_body.decode("utf-8"))
+            chat_id = str(payload.get("chat_id", "")).strip()
+            image_data = payload.get("image_data", "")
+            report = str(payload.get("report", "")).strip()
+
+            if not chat_id or not image_data.startswith("data:image/png;base64,"):
+                self.respond(400, {"ok": False, "error": "invalid payload"})
+                return
+
+            image_base64 = re.sub(r"^data:image/png;base64,", "", image_data)
+            image_bytes = __import__("base64").b64decode(image_base64)
+
+            send_photo(chat_id, image_bytes, "DOMIX AI: готовый проект")
+            for chunk in split_message(report):
+                send_message(chat_id, f"<pre>{html_escape(chunk)}</pre>")
+
+            self.respond(200, {"ok": True})
+        except Exception as exc:
+            print(f"Project submit error: {exc}")
+            self.respond(500, {"ok": False, "error": "submit failed"})
+
     def log_message(self, format, *args):
         return
 
     def respond(self, status_code, payload):
         body = json.dumps(payload).encode("utf-8")
         self.send_response(status_code)
+        self.send_cors_headers()
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+    def send_cors_headers(self):
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+
+
+def split_message(text, limit=3500):
+    chunks = []
+    current = []
+    current_length = 0
+
+    for line in text.splitlines():
+        line_length = len(line) + 1
+        if current and current_length + line_length > limit:
+            chunks.append("\n".join(current))
+            current = []
+            current_length = 0
+        current.append(line)
+        current_length += line_length
+
+    if current:
+        chunks.append("\n".join(current))
+
+    return chunks or ["DOMIX AI: проект готов."]
+
+
+def html_escape(text):
+    return (
+        text.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
 
 
 def run_webhook_server():

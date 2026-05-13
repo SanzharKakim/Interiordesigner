@@ -319,20 +319,27 @@ p {
   justify-content: flex-end;
 }
 
-.result-actions a {
+.result-actions a,
+.result-actions button {
   display: inline-grid;
   place-items: center;
   min-height: 40px;
   padding: 0 14px;
+  border: 0;
   border-radius: 8px;
   background: var(--accent);
   color: #fff;
   font-weight: 750;
   text-decoration: none;
+  cursor: pointer;
 }
 
-.result-actions a:first-child {
+.result-actions a:first-of-type {
   background: #3a444d;
+}
+
+.result-actions button {
+  background: #20565a;
 }
 
 .mobile-save-hint {
