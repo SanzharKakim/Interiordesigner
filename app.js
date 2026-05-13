@@ -1,4 +1,13 @@
 const stage = document.querySelector("#stage");
+const newRoomBtn = document.querySelector("#newRoomBtn");
+const projectsBtn = document.querySelector("#projectsBtn");
+const helpBtn = document.querySelector("#helpBtn");
+const projectsDialog = document.querySelector("#projectsDialog");
+const helpDialog = document.querySelector("#helpDialog");
+const closeProjectsBtn = document.querySelector("#closeProjectsBtn");
+const closeHelpBtn = document.querySelector("#closeHelpBtn");
+const saveProjectBtn = document.querySelector("#saveProjectBtn");
+const loadProjectBtn = document.querySelector("#loadProjectBtn");
 const roomInput = document.querySelector("#roomInput");
 const emptyState = document.querySelector("#emptyState");
 const roomTypes = document.querySelector("#roomTypes");
@@ -31,10 +40,12 @@ const resultPanel = document.querySelector("#resultPanel");
 const resultImage = document.querySelector("#resultImage");
 const materialsList = document.querySelector("#materialsList");
 const downloadResultLink = document.querySelector("#downloadResultLink");
+const openResultLink = document.querySelector("#openResultLink");
 const duplicateBtn = document.querySelector("#duplicateBtn");
 const deleteBtn = document.querySelector("#deleteBtn");
 const exportBtn = document.querySelector("#exportBtn");
 const clearBtn = document.querySelector("#clearBtn");
+const PROJECT_STORAGE_KEY = "domix-ai-project";
 
 const roomCatalogs = {
   living: {
@@ -382,6 +393,86 @@ function clearRoom() {
   setSelected(null);
 }
 
+function newRoom() {
+  clearRoom();
+  stage.style.backgroundImage = "";
+  roomImage = null;
+  roomInput.value = "";
+  emptyState.style.display = "";
+  resultPanel.classList.add("hidden");
+  statusText.textContent = "Новая комната готова. Загрузите фото и добавьте мебель.";
+}
+
+function openDialog(dialog) {
+  dialog.classList.remove("hidden");
+}
+
+function closeDialog(dialog) {
+  dialog.classList.add("hidden");
+}
+
+function saveProject() {
+  const project = {
+    currentRoom,
+    room: {
+      width: roomWidthInput.value,
+      depth: roomDepthInput.value,
+      height: roomHeightInput.value,
+    },
+    camera: {
+      tilt: cameraTiltRange.value,
+      yaw: cameraYawRange.value,
+      zoom: cameraZoomRange.value,
+    },
+    items: [...document.querySelectorAll(".item")].map((item) => ({
+      type: item.dataset.type,
+      label: item.dataset.label,
+      width: item.dataset.width,
+      height: item.dataset.height,
+      depth: item.dataset.depth,
+      baseWidth: item.dataset.baseWidth,
+      baseHeight: item.dataset.baseHeight,
+      baseDepth: item.dataset.baseDepth,
+      realWidth: item.dataset.realWidth,
+      realDepth: item.dataset.realDepth,
+      realHeight: item.dataset.realHeight,
+      rotate: item.dataset.rotate,
+      tilt: item.dataset.tilt,
+      color: item.dataset.color,
+      left: parseInt(item.style.left, 10),
+      top: parseInt(item.style.top, 10),
+    })),
+  };
+
+  localStorage.setItem(PROJECT_STORAGE_KEY, JSON.stringify(project));
+  statusText.textContent = "Проект сохранен в этом браузере.";
+  closeDialog(projectsDialog);
+}
+
+function loadProject() {
+  const rawProject = localStorage.getItem(PROJECT_STORAGE_KEY);
+  if (!rawProject) {
+    statusText.textContent = "Сохраненный проект пока не найден.";
+    closeDialog(projectsDialog);
+    return;
+  }
+
+  const project = JSON.parse(rawProject);
+  clearRoom();
+  currentRoom = project.currentRoom || "living";
+  roomWidthInput.value = project.room?.width || roomCatalogs[currentRoom].room.width;
+  roomDepthInput.value = project.room?.depth || roomCatalogs[currentRoom].room.depth;
+  roomHeightInput.value = project.room?.height || roomCatalogs[currentRoom].room.height;
+  renderRoomTypes();
+  renderCatalog();
+  updateGridLabels();
+  setCamera(project.camera || { tilt: 0, yaw: 0, zoom: 100 });
+
+  (project.items || []).forEach((item) => addItem(item, item));
+  statusText.textContent = "Проект загружен. Фото комнаты нужно загрузить заново, если оно не отображается.";
+  closeDialog(projectsDialog);
+}
+
 function exportPng() {
   const rect = stage.getBoundingClientRect();
   const scale = 2;
@@ -412,6 +503,7 @@ function exportPng() {
 function showResult(imageUrl) {
   resultImage.src = imageUrl;
   downloadResultLink.href = imageUrl;
+  openResultLink.href = imageUrl;
   materialsList.innerHTML = buildMaterialsHtml();
   resultPanel.classList.remove("hidden");
   resultPanel.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -662,6 +754,19 @@ roomHeightInput.addEventListener("input", updateGridLabels);
 gridToggle.addEventListener("change", () => {
   perspectiveGrid.classList.toggle("hidden", !gridToggle.checked);
 });
+newRoomBtn.addEventListener("click", newRoom);
+projectsBtn.addEventListener("click", () => openDialog(projectsDialog));
+helpBtn.addEventListener("click", () => openDialog(helpDialog));
+closeProjectsBtn.addEventListener("click", () => closeDialog(projectsDialog));
+closeHelpBtn.addEventListener("click", () => closeDialog(helpDialog));
+projectsDialog.addEventListener("click", (event) => {
+  if (event.target === projectsDialog) closeDialog(projectsDialog);
+});
+helpDialog.addEventListener("click", (event) => {
+  if (event.target === helpDialog) closeDialog(helpDialog);
+});
+saveProjectBtn.addEventListener("click", saveProject);
+loadProjectBtn.addEventListener("click", loadProject);
 cameraTiltRange.addEventListener("input", updateCamera);
 cameraYawRange.addEventListener("input", updateCamera);
 cameraZoomRange.addEventListener("input", updateCamera);

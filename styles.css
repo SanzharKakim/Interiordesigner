@@ -312,7 +312,14 @@ p {
   margin-bottom: 14px;
 }
 
-.result-header a {
+.result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.result-actions a {
   display: inline-grid;
   place-items: center;
   min-height: 40px;
@@ -322,6 +329,20 @@ p {
   color: #fff;
   font-weight: 750;
   text-decoration: none;
+}
+
+.result-actions a:first-child {
+  background: #3a444d;
+}
+
+.mobile-save-hint {
+  margin-bottom: 12px;
+  padding: 9px 10px;
+  border: 1px solid rgba(47, 111, 115, 0.24);
+  border-radius: 8px;
+  background: #eef6f4;
+  color: var(--accent-strong);
+  font-weight: 650;
 }
 
 .result-grid {
